@@ -12,6 +12,7 @@
             renderer.queue.RenderQueue$Bucket
             scene.shape.Box
             scene.Node
+            texture.Texture
             math.Vector3f
             math.ColorRGBA]))
 
@@ -42,7 +43,8 @@
            :setLocalTranslation [[Vector3f [1 -1 -2]]]
            :setMaterial [[Material [assetManager
                                     "Common/MatDefs/Misc/Unshaded.j3md"]
-                          {:setColor ["Color" ColorRGBA/Red]}]]}]]]
+                          {:setColor ["Color" ColorRGBA/White]
+                           :setTexture ["ColorMap" ^Texture (.loadTexture assetManager "images/om.jpg")]}]]}]]]
        [DirectionalLight []
         {:setColor [ColorRGBA/White]
          :setDirection [[Vector3f [1 0 -2]
