@@ -38,15 +38,15 @@
     (render [this]
       [[Node ["pivot"] {}
         [[Geometry ["Box" ]
-          {:Mesh [Box [1 1 1]]
-           :LocalTranslation [Vector3f [1 -1 -2]]
-           :Material [Material [assetManager
-                                "Common/MatDefs/Misc/Unshaded.j3md"]
-                      {:Color ColorRGBA/Red}]}]]]]
+          {:setMesh [[Box [1 1 1]]]
+           :setLocalTranslation [[Vector3f [1 -1 -2]]]
+           :setMaterial [[Material [assetManager
+                                    "Common/MatDefs/Misc/Unshaded.j3md"]
+                          {:setColor ["Color" ColorRGBA/Red]}]]}]]]]
       )))
 
 (defn init [app]
-  (let [;l1 (DirectionalLight.)
+  (let [l1 (DirectionalLight.)
         ;;pivot (Node. "pivot")
         root (.getRootNode app)
         ;;cinematic (Cinematic. root)
@@ -54,14 +54,15 @@
     (clear-stage root)
     (td/root root-component app-state {:target root})
     ;;(.attach (.getStateManager app) cinematic)
-    ;;(.setColor l1 (ColorRGBA/White))
+    (.setColor l1 (ColorRGBA/White))
+    (.addLight root l1)
     ;;(.setDirection l1 (.normalizeLocal (Vector3f. 1 0 -2)))
     ;;(set-camera (.getCamera app))
     ;;(actions/set-bindings (.getInputManager app))
     ;;(state/process-op (first state/example-state) pivot assetManager cinematic)
     ;;(state/process-op (second state/example-state) pivot assetManager cinematic)
 
-    (comment oto root
+    (comment doto root
       (.attachChild (make-sky))
       (.addLight l1)
       (.attachChild pivot))
