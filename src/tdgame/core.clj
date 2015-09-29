@@ -42,7 +42,11 @@
            :setLocalTranslation [[Vector3f [1 -1 -2]]]
            :setMaterial [[Material [assetManager
                                     "Common/MatDefs/Misc/Unshaded.j3md"]
-                          {:setColor ["Color" ColorRGBA/Red]}]]}]]]]
+                          {:setColor ["Color" ColorRGBA/Red]}]]}]]]
+       [DirectionalLight []
+        {:setColor [ColorRGBA/White]
+         :setDirection [[Vector3f [1 0 -2]
+                         {:normalizeLocal []}]]}]]
       )))
 
 (defn init [app]
