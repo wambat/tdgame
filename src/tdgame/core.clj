@@ -25,26 +25,29 @@
 
 (defonce assetManager (JmeSystem/newAssetManager desktop-cfg))
 
-(def app-state (atom {}))
+(def app-state (atom (for [x (range -2 0)
+                           y (range -2 0)
+                           z (range -2 0)]
+                       [:box x y z])))
 
 (defn clear-stage [root]
   (.clear (.getWorldLightList root))
   (.clear (.getLocalLightList root))
-  (.detachAllChildren root) 
-  )
+  (.detachAllChildren root))
 
 (defn root-component [data owner options]
   (reify
     td/IRender
     (render [this]
       [[Node ["pivot"] {}
-        [[Geometry ["Box" ]
-          {:setMesh [[Box [1 1 1]]]
-           :setLocalTranslation [[Vector3f [1 -1 -2]]]
-           :setMaterial [[Material [assetManager
-                                    "Common/MatDefs/Misc/Unshaded.j3md"]
-                          {:setColor ["Color" ColorRGBA/White]
-                           :setTexture ["ColorMap" ^Texture (.loadTexture assetManager "images/om.jpg")]}]]}]]]
+        (mapv (fn [[type x y z]]
+                [Geometry [(str "Box_" x "_" y "_" z) ]
+                 {:setMesh [[Box [0.2 0.2 0.2]]]
+                  :setLocalTranslation [[Vector3f [x y z]]]
+                  :setMaterial [[Material [assetManager
+                                           "Common/MatDefs/Misc/Unshaded.j3md"]
+                                 {:setColor ["Color" ColorRGBA/White]
+                                  :setTexture ["ColorMap" ^Texture (.loadTexture assetManager "images/om.jpg")]}]]}]) data)]
        [DirectionalLight []
         {:setColor [ColorRGBA/White]
          :setDirection [[Vector3f [1 0 -2]
@@ -96,3 +99,19 @@
   ;;(launch-3d-app)
   (launch-3d-app)
   )
+
+(defn up1 []
+
+  (reset! app-state (for [x (range 0 2)
+                          y (range 0 2)
+                          z (range 0 2)]
+                      [:box x y z]))
+  ) 
+
+(defn up2 []
+
+  (reset! app-state (for [x (range -2 2)
+                          y (range -2 2)
+                          z (range -2 2)]
+                      [:box x y z]))
+  ) 
