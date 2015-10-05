@@ -85,6 +85,8 @@
              )
 
            (simpleUpdate [tpf]
+             (td/process-state-updates this tpf)
+
              ;;(game/update this tpf)
              )))
 

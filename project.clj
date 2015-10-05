@@ -5,6 +5,6 @@
   :license {:name ""
             :url ""}
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [com.chiefcoder/threedom "0.1.1-SNAPSHOT"]
+                 [com.chiefcoder/threedom "0.1.2-SNAPSHOT"]
                  [org.clojars.ndepalma/jme-game-engine "3.0"]]
   :repl-options {:init-ns tdgame.core})
