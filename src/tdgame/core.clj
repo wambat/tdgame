@@ -1,5 +1,6 @@
 (ns tdgame.core
-  (:require [threedom.core :as td])
+  (:require [threedom.core :as td]
+            )
   (:import [com.jme3 app.SimpleApplication
             material.Material
             material.RenderState
@@ -14,7 +15,8 @@
             scene.Node
             texture.Texture
             math.Vector3f
-            math.ColorRGBA]))
+            math.ColorRGBA]
+           tdgame.controllers.SimpleRotation))
 
 (defonce ^:dynamic *app-settings* (doto (AppSettings. true)
                                     (.setFullscreen false)
@@ -65,6 +67,7 @@
     ;;(.attach (.getStateManager app) cinematic)
     (.setColor l1 (ColorRGBA/White))
     (.addLight root l1)
+    (.addControl root (SimpleRotation.))
     ;;(.setDirection l1 (.normalizeLocal (Vector3f. 1 0 -2)))
     ;;(set-camera (.getCamera app))
     ;;(actions/set-bindings (.getInputManager app))
