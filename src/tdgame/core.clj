@@ -37,19 +37,24 @@
   (.clear (.getLocalLightList root))
   (.detachAllChildren root))
 
+
+
 (defn root-component [data owner options]
   (reify
     td/IRender
     (render [this]
       [[Node ["pivot"] {}
         (mapv (fn [[type x y z]]
-                [Geometry [(str "Box_" x "_" y "_" z) ]
-                 {:setMesh [[Box [0.2 0.2 0.2]]]
-                  :setLocalTranslation [[Vector3f [x y z]]]
-                  :setMaterial [[Material [assetManager
-                                           "Common/MatDefs/Misc/Unshaded.j3md"]
-                                 {:setColor ["Color" ColorRGBA/White]
-                                  :setTexture ["ColorMap" ^Texture (.loadTexture assetManager "images/om.jpg")]}]]}]) data)]
+                [Node [(str "Node_" x "_" y "_" z)]
+                 {:addControl [[SimpleRotation []
+                                {:setSpeed [x]}]]}
+                 [[Geometry [(str "Box_" x "_" y "_" z) ]
+                   {:setMesh [[Box [0.2 0.2 0.2]]]
+                    :setLocalTranslation [[Vector3f [x y z]]]
+                    :setMaterial [[Material [assetManager
+                                             "Common/MatDefs/Misc/Unshaded.j3md"]
+                                   {:setColor ["Color" ColorRGBA/White]
+                                    :setTexture ["ColorMap" ^Texture (.loadTexture assetManager "images/om.jpg")]}]]}]]]) data)]
        [DirectionalLight []
         {:setColor [ColorRGBA/White]
          :setDirection [[Vector3f [1 0 -2]
@@ -67,7 +72,7 @@
     ;;(.attach (.getStateManager app) cinematic)
     (.setColor l1 (ColorRGBA/White))
     (.addLight root l1)
-    (.addControl root (SimpleRotation.))
+    ;;(.addControl root (SimpleRotation.))
     ;;(.setDirection l1 (.normalizeLocal (Vector3f. 1 0 -2)))
     ;;(set-camera (.getCamera app))
     ;;(actions/set-bindings (.getInputManager app))
