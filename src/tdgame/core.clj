@@ -57,13 +57,14 @@
   (reify
     td/IRender
     (render [this]
-      [[Node ["pivot"] {}
+      [Node ["pivot"] {}
+       (concat
         (mapv (fn [[type x y z]]
-                (td/build box-component {:x x :y y :z z} {})) data)]
-       [DirectionalLight []
-        {:setColor [ColorRGBA/White]
-         :setDirection [[Vector3f [1 0 -2]
-                         {:normalizeLocal []}]]}]])))
+                (td/build box-component {:x x :y y :z z} {})) data)
+        [[DirectionalLight []
+          {:setColor [ColorRGBA/White]
+           :setDirection [[Vector3f [1 0 -2]
+                           {:normalizeLocal []}]]}]])])))
 
 (defn init [app]
   (let [l1 (DirectionalLight.)
