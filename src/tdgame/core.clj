@@ -37,7 +37,21 @@
   (.clear (.getLocalLightList root))
   (.detachAllChildren root))
 
-
+(defn box-component [{:keys [x y z]} owner options]
+  (reify
+    td/IRender
+    (render [this]
+      [Node [(str "Node_" x "_" y "_" z)]
+       {:addControl [[SimpleRotation []
+                      {:setSpeed [x]}]]
+        :move [[Vector3f [x y z]]]}
+       [[Geometry [(str "Box_" x "_" y "_" z)]
+         {:setMesh [[Box [0.2 0.2 0.2]]]
+          ;;:setLocalTranslation [[Vector3f [x y z]]]
+          :setMaterial [[Material [assetManager
+                                   "Common/MatDefs/Misc/Unshaded.j3md"]
+                         {:setColor ["Color" ColorRGBA/White]
+                          :setTexture ["ColorMap" ^Texture (.loadTexture assetManager "images/om.jpg")]}]]}]]])))
 
 (defn root-component [data owner options]
   (reify
@@ -45,21 +59,11 @@
     (render [this]
       [[Node ["pivot"] {}
         (mapv (fn [[type x y z]]
-                [Node [(str "Node_" x "_" y "_" z)]
-                 {:addControl [[SimpleRotation []
-                                {:setSpeed [x]}]]}
-                 [[Geometry [(str "Box_" x "_" y "_" z) ]
-                   {:setMesh [[Box [0.2 0.2 0.2]]]
-                    :setLocalTranslation [[Vector3f [x y z]]]
-                    :setMaterial [[Material [assetManager
-                                             "Common/MatDefs/Misc/Unshaded.j3md"]
-                                   {:setColor ["Color" ColorRGBA/White]
-                                    :setTexture ["ColorMap" ^Texture (.loadTexture assetManager "images/om.jpg")]}]]}]]]) data)]
+                (td/build box-component {:x x :y y :z z} {})) data)]
        [DirectionalLight []
         {:setColor [ColorRGBA/White]
          :setDirection [[Vector3f [1 0 -2]
-                         {:normalizeLocal []}]]}]]
-      )))
+                         {:normalizeLocal []}]]}]])))
 
 (defn init [app]
   (let [l1 (DirectionalLight.)
