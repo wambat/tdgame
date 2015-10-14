@@ -15,6 +15,8 @@
             scene.Node
             texture.Texture
             math.Vector3f
+            math.Ray
+            collision.CollisionResults
             math.ColorRGBA]
            tdgame.controllers.SimpleRotation))
 
@@ -27,10 +29,10 @@
 
 (defonce assetManager (JmeSystem/newAssetManager desktop-cfg))
 
-(def app-state (atom (for [x (range -2 0)
-                           y (range -2 0)
-                           z (range -2 0)]
-                       [:box x y z])))
+(def app-state (atom {:geom (for [x (range -2 0)
+                                  y (range -2 0)
+                                  z (range -2 0)]
+                              [:box x y z])}))
 
 (defn clear-stage [root]
   (.clear (.getWorldLightList root))
@@ -60,11 +62,24 @@
       [Node ["pivot"] {}
        (concat
         (mapv (fn [[type x y z]]
-                (td/build box-component {:x x :y y :z z} {})) data)
+                (td/build box-component {:x x :y y :z z} {})) (:geom data))
         [[DirectionalLight []
           {:setColor [ColorRGBA/White]
            :setDirection [[Vector3f [1 0 -2]
                            {:normalizeLocal []}]]}]])])))
+(defn check-mouse-collisions [app node]
+  (let [origin (.getWorldCoordinates (.getCamera app) (.getCursorPosition (.getInputManager app)) 0.0)
+        direction (.getWorldCoordinates (.getCamera app) (.getCursorPosition (.getInputManager app)) 0.3)]
+    (.normalizeLocal (.subtractLocal direction origin))
+    (let [ray (Ray. origin direction)
+          results (CollisionResults.)]
+      (.collideWith node ray results)
+      (if (> (.size results) 0)
+        (let [closest (.getClosestCollision results)
+              g (.getGeometry closest)]
+          (clojure.pprint/pprint (.getName g))
+          g)
+        nil))))
 
 (defn init [app]
   (let [l1 (DirectionalLight.)
@@ -94,10 +109,17 @@
 (def app (proxy [SimpleApplication] []
            (simpleInitApp []
              (org.lwjgl.input.Mouse/setGrabbed false)
+
+             (.setEnabled (.getFlyByCamera this) false)
+             (.setMouseCursor (.getInputManager this)
+                              (.loadAsset assetManager "cursors/monkeyani.ani"))
              (init this)
              )
 
            (simpleUpdate [tpf]
+             (if-let [selected-geom (check-mouse-collisions this (.getRootNode this))]
+               (swap! app-state assoc :selected (.getName selected-geom)))
+             
              (td/process-state-updates this tpf)
 
              ;;(game/update this tpf)
@@ -117,16 +139,16 @@
 
 (defn up1 []
 
-  (reset! app-state (for [x (range 0 2)
-                          y (range 0 2)
-                          z (range 0 2)]
-                      [:box x y z]))
-  ) 
+  (swap! app-state assoc :geom (for [x (range 0 2)
+                                     y (range 0 2)
+                                     z (range 0 2)]
+                                 [:box x y z]))
+  )
 
 (defn up2 []
 
-  (reset! app-state (for [x (range -2 2)
-                          y (range -2 2)
-                          z (range -2 2)]
-                      [:box x y z]))
-  ) 
+  (swap! app-state assoc :geom (for [x (range -2 2)
+                                     y (range -2 2)
+                                     z (range -2 2)]
+                                 [:box x y z]))
+  )
