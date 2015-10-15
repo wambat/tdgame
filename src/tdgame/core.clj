@@ -29,10 +29,13 @@
 
 (defonce assetManager (JmeSystem/newAssetManager desktop-cfg))
 
-(def app-state (atom {:geom (for [x (range -2 0)
-                                  y (range -2 0)
-                                  z (range -2 0)]
-                              [:box x y z])}))
+;; (def app-state (atom {:geom (for [x (range -2 0)
+;;                                   y (range -2 0)
+;;                                   z (range -2 0)]
+;;                               [:box x y z])}))
+
+(def app-state (atom {:geom [[:box 1 1 1]
+                             [:box 2 1 1]]}))
 
 (defn clear-stage [root]
   (.clear (.getWorldLightList root))
@@ -137,15 +140,22 @@
   (launch-3d-app)
   )
 
-(defn up1 []
+(defn up0 []
 
-  (swap! app-state assoc :geom (for [x (range 0 2)
-                                     y (range 0 2)
-                                     z (range 0 2)]
-                                 [:box x y z]))
+  (swap! app-state assoc :geom [])
   )
 
+(defn up1 []
+  (swap! app-state assoc :geom 
+         [[:box 1 1 1]
+          [:box 2 1 1]]))
+
 (defn up2 []
+  (swap! app-state assoc :geom 
+         [[:box 1 1 1]
+          [:box -1 1 1]]))
+
+(defn up9 []
 
   (swap! app-state assoc :geom (for [x (range -2 2)
                                      y (range -2 2)
