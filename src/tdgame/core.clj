@@ -42,17 +42,19 @@
   (.clear (.getLocalLightList root))
   (.detachAllChildren root))
 
-(defn box-component [{:keys [x y z]} owner options]
+(defn box-component [{:keys [x y z name selected]} owner options]
   (reify
     td/IRender
     (render [this]
       [Node [(str "Node_" x "_" y "_" z)]
        {:addControl [[SimpleRotation []
                       {:setSpeed [x]}]]
-        :move [[Vector3f [x y z]]]}
-       [[Geometry [(str "Box_" x "_" y "_" z)]
+        :setLocalTranslation [[Vector3f [x y z]]]}
+       [[Geometry [name]
          {:setMesh [[Box [0.2 0.2 0.2]]]
           ;;:setLocalTranslation [[Vector3f [x y z]]]
+          :setLocalScale [(float (if selected 2.0
+                                     1.0))]
           :setMaterial [[Material [assetManager
                                    "Common/MatDefs/Misc/Unshaded.j3md"]
                          {:setColor ["Color" ColorRGBA/White]
@@ -65,11 +67,16 @@
       [Node ["pivot"] {}
        (concat
         (mapv (fn [[type x y z]]
-                (td/build box-component {:x x :y y :z z} {})) (:geom data))
+                (let [name (str "Box_" x "_" y "_" z)
+                      selected (= name (:selected data))]
+                  (td/build box-component {:x x :y y :z z
+                                           :name name
+                                           :selected selected} {}))) (:geom data))
         [[DirectionalLight []
           {:setColor [ColorRGBA/White]
            :setDirection [[Vector3f [1 0 -2]
                            {:normalizeLocal []}]]}]])])))
+
 (defn check-mouse-collisions [app node]
   (let [origin (.getWorldCoordinates (.getCamera app) (.getCursorPosition (.getInputManager app)) 0.0)
         direction (.getWorldCoordinates (.getCamera app) (.getCursorPosition (.getInputManager app)) 0.3)]
@@ -80,7 +87,7 @@
       (if (> (.size results) 0)
         (let [closest (.getClosestCollision results)
               g (.getGeometry closest)]
-          (clojure.pprint/pprint (.getName g))
+          ;;(clojure.pprint/pprint (.getName g))
           g)
         nil))))
 
@@ -121,8 +128,9 @@
 
            (simpleUpdate [tpf]
              (if-let [selected-geom (check-mouse-collisions this (.getRootNode this))]
-               (swap! app-state assoc :selected (.getName selected-geom)))
-             
+               (swap! app-state assoc :selected (.getName selected-geom))
+               (if (:selected @app-state)
+                 (swap! app-state dissoc :selected)))
              (td/process-state-updates this tpf)
 
              ;;(game/update this tpf)
