@@ -52,7 +52,6 @@
         :setLocalTranslation [[Vector3f [x y z]]]}
        [[Geometry [name]
          {:setMesh [[Box [0.2 0.2 0.2]]]
-          ;;:setLocalTranslation [[Vector3f [x y z]]]
           :setLocalScale [(float (if selected 2.0
                                      1.0))]
           :setMaterial [[Material [assetManager
