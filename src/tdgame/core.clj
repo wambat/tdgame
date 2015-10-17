@@ -36,51 +36,86 @@
 ;;                                   y (range -2 0)
 ;;                                   z (range -2 0)]
 ;;                               [:box x y z])}))
+(def initial-game-state [[4 3 2 1 0]
+                         []
+                         []])
+(def win-game-state (reverse initial-game-state))
+(def peg-colors [ColorRGBA/Red ColorRGBA/Green ColorRGBA/Blue ColorRGBA/Yellow ColorRGBA/Pink])
+;; (def app-state (atom {:geom [[:box 1 1 1]
+;;                              [:box 2 1 1]]}))
 
-(def app-state (atom {:geom [[:box 1 1 1]
-                             [:box 2 1 1]]}))
-
+(def app-state (atom {:board initial-game-state}))
 (defn clear-stage [root]
   (.clear (.getWorldLightList root))
   (.clear (.getLocalLightList root))
   (.detachAllChildren root))
 
-(defn box-component [{:keys [x y z name selected]} owner options]
+;; (defn box-component [{:keys [x y z name selected]} owner options]
+;;   (reify
+;;     td/IRender
+;;     (render [this]
+;;       [Node [(str "Node_" x "_" y "_" z)]
+;;        {:addControl [[SimpleRotation []
+;;                       {:setSpeed [x]}]]
+;;         :setLocalTranslation [[Vector3f [x y z]]]}
+;;        (let [q (Quaternion.)]
+;;          (.fromAngleAxis q (* 90 FastMath/DEG_TO_RAD) Vector3f/UNIT_X)
+;;          [[Geometry [name]
+;;            {:setMesh [[Torus [16 16 0.2 0.3]]]
+;;             :setLocalRotation [q]
+;;             :setLocalScale [(float (if selected 2.0
+;;                                        1.0))]
+;;             :setMaterial [[Material [assetManager
+;;                                      "Common/MatDefs/Misc/Unshaded.j3md"]
+;;                            {:setColor ["Color" ColorRGBA/Blue]
+;;                             ;;:setTexture ["ColorMap" ^Texture (.loadTexture assetManager "images/om.jpg")]
+;;                             }]]}]])])))
+
+(defn peg-component [{:keys [peg place name selected]} owner options]
   (reify
-    td/IRender
+      td/IRender
     (render [this]
-      [Node [(str "Node_" x "_" y "_" z)]
-       {:addControl [[SimpleRotation []
-                      {:setSpeed [x]}]]
-        :setLocalTranslation [[Vector3f [x y z]]]}
-       (let [q (Quaternion.)]
+      [Node [(str "node_" name)]
+       {:setLocalTranslation [[Vector3f [0 (/ place 3) 0]]]}
+       (let [q (Quaternion.)
+             color (nth peg-colors peg)]
          (.fromAngleAxis q (* 90 FastMath/DEG_TO_RAD) Vector3f/UNIT_X)
          [[Geometry [name]
-           {:setMesh [[Torus [16 16 0.2 0.3]]]
+           {:setMesh [[Torus [16 16 0.2 (* (+ peg 1) 0.1)]]]
             :setLocalRotation [q]
             :setLocalScale [(float (if selected 2.0
                                        1.0))]
             :setMaterial [[Material [assetManager
                                      "Common/MatDefs/Misc/Unshaded.j3md"]
-                           {:setColor ["Color" ColorRGBA/White]
-                            :setTexture ["ColorMap" ^Texture (.loadTexture assetManager "images/om.jpg")]}]]}]])])))
+                           {:setColor ["Color" color]
+                            ;;:setTexture ["ColorMap" ^Texture (.loadTexture assetManager "images/om.jpg")]
+                            }]]}]])])))
+
+(defn row-component [{:keys [row pegs selected]} owner options]
+  (reify
+      td/IRender
+    (render [this]
+      [Node [(str "row_" row)]
+       {:setLocalTranslation [[Vector3f [row 0 0]]]}
+       (map-indexed (fn [place peg]
+               (let [name (str "peg_" peg)]
+                 (td/build peg-component {:peg peg :place place
+                                          :name name
+                                          :selected selected} {}))) pegs)])))
 
 (defn root-component [data owner options]
   (reify
-    td/IRender
+      td/IRender
     (render [this]
       [Node ["pivot"] {}
-       (concat
-        (mapv (fn [[type x y z]]
-                (let [name (str "item_" x "_" y "_" z)
-                      selected (= name (:selected data))]
-                  (td/build box-component {:x x :y y :z z
-                                           :name name
-                                           :selected selected} {}))) (:geom data))
-        [[DirectionalLight []
-          {:setColor [ColorRGBA/White]
-           :setDirection [[Vector3f [1 0 -2]
-                           {:normalizeLocal []}]]}]])])))
+       [[Node ["board"] {}
+         (map-indexed (fn [row pegs]
+                 (td/build row-component {:pegs pegs :row row
+                                          :selected (:selected data)} {})) (:board data))]]
+       [[DirectionalLight []
+         {:setColor [ColorRGBA/White]
+          :setDirection [[Vector3f [1 0 -2]
+                          {:normalizeLocal []}]]}]]])))
 
 (defn check-mouse-collisions [app node]
   (let [origin (.getWorldCoordinates (.getCamera app) (.getCursorPosition (.getInputManager app)) 0.0)
