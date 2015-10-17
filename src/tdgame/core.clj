@@ -12,10 +12,13 @@
             util.SkyFactory
             renderer.queue.RenderQueue$Bucket
             scene.shape.Box
+            scene.shape.Torus
             scene.Node
             texture.Texture
             math.Vector3f
             math.Ray
+            math.Quaternion
+            math.FastMath
             collision.CollisionResults
             math.ColorRGBA]
            tdgame.controllers.SimpleRotation))
@@ -50,14 +53,17 @@
        {:addControl [[SimpleRotation []
                       {:setSpeed [x]}]]
         :setLocalTranslation [[Vector3f [x y z]]]}
-       [[Geometry [name]
-         {:setMesh [[Box [0.2 0.2 0.2]]]
-          :setLocalScale [(float (if selected 2.0
-                                     1.0))]
-          :setMaterial [[Material [assetManager
-                                   "Common/MatDefs/Misc/Unshaded.j3md"]
-                         {:setColor ["Color" ColorRGBA/White]
-                          :setTexture ["ColorMap" ^Texture (.loadTexture assetManager "images/om.jpg")]}]]}]]])))
+       (let [q (Quaternion.)]
+         (.fromAngleAxis q (* 90 FastMath/DEG_TO_RAD) Vector3f/UNIT_X)
+         [[Geometry [name]
+           {:setMesh [[Torus [16 16 0.2 0.3]]]
+            :setLocalRotation [q]
+            :setLocalScale [(float (if selected 2.0
+                                       1.0))]
+            :setMaterial [[Material [assetManager
+                                     "Common/MatDefs/Misc/Unshaded.j3md"]
+                           {:setColor ["Color" ColorRGBA/White]
+                            :setTexture ["ColorMap" ^Texture (.loadTexture assetManager "images/om.jpg")]}]]}]])])))
 
 (defn root-component [data owner options]
   (reify
@@ -66,7 +72,7 @@
       [Node ["pivot"] {}
        (concat
         (mapv (fn [[type x y z]]
-                (let [name (str "Box_" x "_" y "_" z)
+                (let [name (str "item_" x "_" y "_" z)
                       selected (= name (:selected data))]
                   (td/build box-component {:x x :y y :z z
                                            :name name
