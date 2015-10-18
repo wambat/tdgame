@@ -20,6 +20,10 @@
             math.Quaternion
             math.FastMath
             collision.CollisionResults
+            input.controls.MouseButtonTrigger
+            input.controls.ActionListener
+            input.controls.Trigger
+            input.MouseInput
             math.ColorRGBA]
            tdgame.controllers.SimpleRotation))
 
@@ -83,8 +87,9 @@
          [[Geometry [name]
            {:setMesh [[Torus [16 16 0.2 (* (+ peg 1) 0.1)]]]
             :setLocalRotation [q]
-            :setLocalScale [(float (if selected 2.0
-                                       1.0))]
+            :setLocalScale [(float (if (= selected name)
+                                     1.1
+                                     1.0))]
             :setMaterial [[Material [assetManager
                                      "Common/MatDefs/Misc/Unshaded.j3md"]
                            {:setColor ["Color" color]
@@ -142,6 +147,15 @@
     ;;(.attach (.getStateManager app) cinematic)
     (.setColor l1 (ColorRGBA/White))
     (.addLight root l1)
+    (.addMapping  (.getInputManager app) "Take"
+                  (into-array Trigger [(MouseButtonTrigger. MouseInput/BUTTON_LEFT)]))
+    (.addListener (.getInputManager app)
+                  (reify
+                      ActionListener
+                    (onAction [this name pressed? tpf]
+                      (if (.equals name "Take")
+                        (clojure.pprint/pprint "Take"))))
+                  (into-array String ["Take"]))
     ;;(.addControl root (SimpleRotation.))
     ;;(.setDirection l1 (.normalizeLocal (Vector3f. 1 0 -2)))
     ;;(set-camera (.getCamera app))
