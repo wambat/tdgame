@@ -66,11 +66,8 @@
                                      1.0))]
             :setMaterial [[Material [assetManager
                                      "Common/MatDefs/Misc/Unshaded.j3md"]
-                           {
-                            :setTexture ["ColorMap" ^Texture (.loadTexture assetManager "images/plast.jpg")]
-                            ;;:setColor ["Diffuse" color]
-                            :setColor ["Color" color]
-                            }]]}]])])))
+                           {:setTexture ["ColorMap" ^Texture (.loadTexture assetManager "images/plast.jpg")]
+                            :setColor ["Color" color]}]]}]])])))
 
 (defn row-component [{:keys [row pegs selected]} owner options]
   (reify
@@ -89,7 +86,7 @@
           (let [q (Quaternion.)]
             (.fromAngleAxis q (* 90 FastMath/DEG_TO_RAD) Vector3f/UNIT_X)
             [[Geometry [(str "shaft_" row)]
-              {:setMesh [[Cylinder [16 16 0.2 2]]]
+              {:setMesh [[Cylinder [16 16 0.15 2]]]
                :setLocalRotation [q]
                :setLocalScale [(float (if (= selected name)
                                         1.1
@@ -127,13 +124,8 @@
         (update to conj peg))))
 
 (defn on-moved [peg to]
-  (if (valid-move? (:board @app-state)
-                   peg
-                   to)
-    (do
-      (clojure.pprint/pprint "Valid")
-      (swap! app-state update :board move-peg peg to))
-    (clojure.pprint/pprint "Not Valid"))
+  (if (valid-move? (:board @app-state) peg to)
+    (swap! app-state update :board move-peg peg to))
   (if (= win-game-state
          (:board @app-state))
     (swap! app-state assoc :board initial-board-state)))
@@ -173,7 +165,7 @@
 
 (defn camera! [cam]
   (let [q (Quaternion. -0.0023028406 0.9786839 -0.20506527 -0.010989709)]
-    (.setLocation cam (Vector3f. 1.5331008 2.8518562 4.7388806))
+    (.setLocation cam (Vector3f. 0.9031008 2.8518562 4.7388806))
     (.setRotation cam q)))
 
 (defn init [app]
