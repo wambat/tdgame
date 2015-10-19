@@ -37,18 +37,11 @@
 
 (defonce assetManager (JmeSystem/newAssetManager desktop-cfg))
 
-;; (def app-state (atom {:geom (for [x (range -2 0)
-;;                                   y (range -2 0)
-;;                                   z (range -2 0)]
-;;                               [:box x y z])}))
 (def initial-board-state [[3 2 1 0]
-                         []
                          []
                          []])
 (def win-game-state (reverse initial-board-state))
 (def peg-colors [ColorRGBA/Red ColorRGBA/Green ColorRGBA/Blue ColorRGBA/Yellow ColorRGBA/Pink])
-;; (def app-state (atom {:geom [[:box 1 1 1]
-;;                              [:box 2 1 1]]}))
 
 (def app-state (atom {:board initial-board-state}))
 (defn clear-stage [root]
@@ -73,8 +66,10 @@
                                      1.0))]
             :setMaterial [[Material [assetManager
                                      "Common/MatDefs/Misc/Unshaded.j3md"]
-                           {:setColor ["Color" color]
-                            ;;:setTexture ["ColorMap" ^Texture (.loadTexture assetManager "images/om.jpg")]
+                           {
+                            :setTexture ["ColorMap" ^Texture (.loadTexture assetManager "images/plast.jpg")]
+                            ;;:setColor ["Diffuse" color]
+                            :setColor ["Color" color]
                             }]]}]])])))
 
 (defn row-component [{:keys [row pegs selected]} owner options]
@@ -100,8 +95,9 @@
                                         1.1
                                         1.0))]
                :setMaterial [[Material [assetManager
-                                        "Common/MatDefs/Misc/Unshaded.j3md"]
-                              {:setColor ["Color" ColorRGBA/Brown]}]]}]])]])])))
+                                        "Common/MatDefs/Misc/ColoredTextured.j3md"]
+                              {:setColor ["Color" ColorRGBA/Brown]
+                               :setTexture ["ColorMap" ^Texture (.loadTexture assetManager "images/om.jpg")]}]]}]])]])])))
 
 (defn root-component [data owner options]
   (reify
@@ -187,6 +183,11 @@
           g)
         nil))))
 
+(defn camera! [cam]
+  (let [q (Quaternion. -0.0023028406 0.9786839 -0.20506527 -0.010989709)]
+    (.setLocation cam (Vector3f. 1.5331008 2.8518562 4.7388806))
+    (.setRotation cam q)))
+
 (defn init [app]
   (let [l1 (DirectionalLight.)
         ;;pivot (Node. "pivot")
@@ -227,6 +228,7 @@
            (simpleInitApp []
              (org.lwjgl.input.Mouse/setGrabbed false)
 
+             (camera! (.getCamera this))
              (.setEnabled (.getFlyByCamera this) false)
              (.setMouseCursor (.getInputManager this)
                               (.loadAsset assetManager "cursors/monkeyani.ani"))
