@@ -13,6 +13,7 @@
             renderer.queue.RenderQueue$Bucket
             scene.shape.Box
             scene.shape.Torus
+            scene.shape.Cylinder
             scene.Node
             texture.Texture
             math.Vector3f
@@ -40,40 +41,20 @@
 ;;                                   y (range -2 0)
 ;;                                   z (range -2 0)]
 ;;                               [:box x y z])}))
-(def initial-game-state [[4 3 2 1 0]
+(def initial-board-state [[3 2 1 0]
+                         []
                          []
                          []])
-(def win-game-state (reverse initial-game-state))
+(def win-game-state (reverse initial-board-state))
 (def peg-colors [ColorRGBA/Red ColorRGBA/Green ColorRGBA/Blue ColorRGBA/Yellow ColorRGBA/Pink])
 ;; (def app-state (atom {:geom [[:box 1 1 1]
 ;;                              [:box 2 1 1]]}))
 
-(def app-state (atom {:board initial-game-state}))
+(def app-state (atom {:board initial-board-state}))
 (defn clear-stage [root]
   (.clear (.getWorldLightList root))
   (.clear (.getLocalLightList root))
   (.detachAllChildren root))
-
-;; (defn box-component [{:keys [x y z name selected]} owner options]
-;;   (reify
-;;     td/IRender
-;;     (render [this]
-;;       [Node [(str "Node_" x "_" y "_" z)]
-;;        {:addControl [[SimpleRotation []
-;;                       {:setSpeed [x]}]]
-;;         :setLocalTranslation [[Vector3f [x y z]]]}
-;;        (let [q (Quaternion.)]
-;;          (.fromAngleAxis q (* 90 FastMath/DEG_TO_RAD) Vector3f/UNIT_X)
-;;          [[Geometry [name]
-;;            {:setMesh [[Torus [16 16 0.2 0.3]]]
-;;             :setLocalRotation [q]
-;;             :setLocalScale [(float (if selected 2.0
-;;                                        1.0))]
-;;             :setMaterial [[Material [assetManager
-;;                                      "Common/MatDefs/Misc/Unshaded.j3md"]
-;;                            {:setColor ["Color" ColorRGBA/Blue]
-;;                             ;;:setTexture ["ColorMap" ^Texture (.loadTexture assetManager "images/om.jpg")]
-;;                             }]]}]])])))
 
 (defn peg-component [{:keys [peg place name selected]} owner options]
   (reify
@@ -102,11 +83,25 @@
     (render [this]
       [Node [(str "row_" row)]
        {:setLocalTranslation [[Vector3f [row 0 0]]]}
-       (map-indexed (fn [place peg]
-               (let [name (str "peg_" peg)]
-                 (td/build peg-component {:peg peg :place place
-                                          :name name
-                                          :selected selected} {}))) pegs)])))
+       (concat
+        (map-indexed (fn [place peg]
+                       (let [name (str "peg_" peg)]
+                         (td/build peg-component {:peg peg :place place
+                                                  :name name
+                                                  :selected selected} {}))) pegs)
+        [[Node [(str "node_shaft_" row)]
+          {:setLocalTranslation [[Vector3f [0 0.8 0]]]}
+          (let [q (Quaternion.)]
+            (.fromAngleAxis q (* 90 FastMath/DEG_TO_RAD) Vector3f/UNIT_X)
+            [[Geometry [(str "shaft_" row)]
+              {:setMesh [[Cylinder [16 16 0.2 2]]]
+               :setLocalRotation [q]
+               :setLocalScale [(float (if (= selected name)
+                                        1.1
+                                        1.0))]
+               :setMaterial [[Material [assetManager
+                                        "Common/MatDefs/Misc/Unshaded.j3md"]
+                              {:setColor ["Color" ColorRGBA/Brown]}]]}]])]])])))
 
 (defn root-component [data owner options]
   (reify
@@ -121,6 +116,62 @@
          {:setColor [ColorRGBA/White]
           :setDirection [[Vector3f [1 0 -2]
                           {:normalizeLocal []}]]}]]])))
+
+(def acs [[[4 3 2] [0] [1]]])
+
+(defn valid-move? [board peg to]
+  (clojure.pprint/pprint [board peg to])
+  (and (some #{peg} (map last board))
+       (or (empty? (get board to))
+           (< peg (last (get board to))))))
+
+(comment
+  (valid-move? acs 0 1)
+  )
+(defn move-peg [board peg to]
+  (let [s (.indexOf (map last board) peg)]
+    (-> board
+        (update s pop)
+        (update to conj peg))))
+
+(defn on-moved [peg to]
+  ;;(swap! app-state dissoc :moving)
+  (clojure.pprint/pprint "Moved")
+  (clojure.pprint/pprint peg)
+  (clojure.pprint/pprint to)
+  (if (valid-move? (:board @app-state)
+                   peg
+                   to)
+    (do
+      (clojure.pprint/pprint "Valid")
+      (swap! app-state update :board move-peg peg to))
+    (clojure.pprint/pprint "Not Valid"))
+  (if (= win-game-state
+         (:board @app-state))
+    (swap! app-state assoc :board initial-board-state)))
+
+
+(defn- selection-info [s]
+  (if s
+    (let [[_ type num] (re-find #"([a-zA-Z\-]*)_(\d+)" s)]
+      {:type (keyword type)
+       :num (Integer. num)})))
+
+(defn on-click []
+  (if-let [sel (selection-info (:selected @app-state))] 
+    (cond
+      (= (:type sel)
+         :peg)
+      (swap! app-state assoc :moving (:selected @app-state))
+      (and (= (:type sel)
+              :shaft)
+           (:moving @app-state))
+      (on-moved (:num (selection-info (:moving @app-state)))
+                (:num sel)))
+    (swap! app-state dissoc :moving))
+
+  (clojure.pprint/pprint "Click")
+  (clojure.pprint/pprint @app-state))
 
 (defn check-mouse-collisions [app node]
   (let [origin (.getWorldCoordinates (.getCamera app) (.getCursorPosition (.getInputManager app)) 0.0)
@@ -147,15 +198,17 @@
     ;;(.attach (.getStateManager app) cinematic)
     (.setColor l1 (ColorRGBA/White))
     (.addLight root l1)
-    (.addMapping  (.getInputManager app) "Take"
+    (.addMapping  (.getInputManager app) "Click"
                   (into-array Trigger [(MouseButtonTrigger. MouseInput/BUTTON_LEFT)]))
     (.addListener (.getInputManager app)
                   (reify
                       ActionListener
                     (onAction [this name pressed? tpf]
-                      (if (.equals name "Take")
-                        (clojure.pprint/pprint "Take"))))
-                  (into-array String ["Take"]))
+                      (if (and (.equals name "Click")
+                               pressed?)
+                        (do
+                          (on-click)))))
+                  (into-array String ["Click"]))
     ;;(.addControl root (SimpleRotation.))
     ;;(.setDirection l1 (.normalizeLocal (Vector3f. 1 0 -2)))
     ;;(set-camera (.getCamera app))
