@@ -113,7 +113,6 @@
           :setDirection [[Vector3f [1 0 -2]
                           {:normalizeLocal []}]]}]]])))
 
-(def acs [[[4 3 2] [0] [1]]])
 
 (defn valid-move? [board peg to]
   (clojure.pprint/pprint [board peg to])
@@ -121,9 +120,6 @@
        (or (empty? (get board to))
            (< peg (last (get board to))))))
 
-(comment
-  (valid-move? acs 0 1)
-  )
 (defn move-peg [board peg to]
   (let [s (.indexOf (map last board) peg)]
     (-> board
@@ -131,10 +127,6 @@
         (update to conj peg))))
 
 (defn on-moved [peg to]
-  ;;(swap! app-state dissoc :moving)
-  (clojure.pprint/pprint "Moved")
-  (clojure.pprint/pprint peg)
-  (clojure.pprint/pprint to)
   (if (valid-move? (:board @app-state)
                    peg
                    to)
@@ -164,10 +156,7 @@
            (:moving @app-state))
       (on-moved (:num (selection-info (:moving @app-state)))
                 (:num sel)))
-    (swap! app-state dissoc :moving))
-
-  (clojure.pprint/pprint "Click")
-  (clojure.pprint/pprint @app-state))
+    (swap! app-state dissoc :moving)))
 
 (defn check-mouse-collisions [app node]
   (let [origin (.getWorldCoordinates (.getCamera app) (.getCursorPosition (.getInputManager app)) 0.0)
@@ -179,7 +168,6 @@
       (if (> (.size results) 0)
         (let [closest (.getClosestCollision results)
               g (.getGeometry closest)]
-          ;;(clojure.pprint/pprint (.getName g))
           g)
         nil))))
 
@@ -190,13 +178,10 @@
 
 (defn init [app]
   (let [l1 (DirectionalLight.)
-        ;;pivot (Node. "pivot")
         root (.getRootNode app)
-        ;;cinematic (Cinematic. root)
         ]
     (clear-stage root)
     (td/root root-component app-state {:target root})
-    ;;(.attach (.getStateManager app) cinematic)
     (.setColor l1 (ColorRGBA/White))
     (.addLight root l1)
     (.addMapping  (.getInputManager app) "Click"
@@ -209,20 +194,7 @@
                                pressed?)
                         (do
                           (on-click)))))
-                  (into-array String ["Click"]))
-    ;;(.addControl root (SimpleRotation.))
-    ;;(.setDirection l1 (.normalizeLocal (Vector3f. 1 0 -2)))
-    ;;(set-camera (.getCamera app))
-    ;;(actions/set-bindings (.getInputManager app))
-    ;;(state/process-op (first state/example-state) pivot assetManager cinematic)
-    ;;(state/process-op (second state/example-state) pivot assetManager cinematic)
-
-    (comment doto root
-      (.attachChild (make-sky))
-      (.addLight l1)
-      (.attachChild pivot))
-    ;;(.rotate pivot 0.4 0.4 0)
-    ))
+                  (into-array String ["Click"]))))
 
 (def app (proxy [SimpleApplication] []
            (simpleInitApp []
@@ -232,18 +204,14 @@
              (.setEnabled (.getFlyByCamera this) false)
              (.setMouseCursor (.getInputManager this)
                               (.loadAsset assetManager "cursors/monkeyani.ani"))
-             (init this)
-             )
+             (init this))
 
            (simpleUpdate [tpf]
              (if-let [selected-geom (check-mouse-collisions this (.getRootNode this))]
                (swap! app-state assoc :selected (.getName selected-geom))
                (if (:selected @app-state)
                  (swap! app-state dissoc :selected)))
-             (td/process-state-updates this tpf)
-
-             ;;(game/update this tpf)
-             )))
+             (td/process-state-updates this tpf))))
 
 (defn launch-3d-app []
   (doto app
@@ -253,29 +221,4 @@
     (.start)))
 
 (defn -main [& args]
-  ;;(launch-3d-app)
-  (launch-3d-app)
-  )
-
-(defn up0 []
-
-  (swap! app-state assoc :geom [])
-  )
-
-(defn up1 []
-  (swap! app-state assoc :geom 
-         [[:box 1 1 1]
-          [:box 2 1 1]]))
-
-(defn up2 []
-  (swap! app-state assoc :geom 
-         [[:box 1 1 1]
-          [:box -1 1 1]]))
-
-(defn up9 []
-
-  (swap! app-state assoc :geom (for [x (range -2 2)
-                                     y (range -2 2)
-                                     z (range -2 2)]
-                                 [:box x y z]))
-  )
+  (launch-3d-app))
