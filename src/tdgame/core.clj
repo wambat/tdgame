@@ -50,10 +50,14 @@
     (swap! app-state assoc :moving (get-in @app-state [:selected :num]))))
 
 (defmethod on-event :selected [event]
-  (swap! app-state assoc :selected (:value event)))
+  (if-not (= (:value event)
+             (:selected @app-state))
+    (swap! app-state assoc :selected (:value event))))
 
 (defmethod on-event :deselected [event]
-  (swap! app-state dissoc :selected))
+  (if
+      (:selected @app-state)
+    (swap! app-state dissoc :selected)))
 
 (defn on-click [{:keys [value event] :as sel}]
   (if (= event :selected)
